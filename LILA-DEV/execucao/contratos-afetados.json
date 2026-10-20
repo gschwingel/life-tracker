@@ -1,0 +1,27 @@
+{
+  "schema": "contratos-afetados/v1",
+  "nota": "Bootstrap retroativo (DEC-009, 2026-10-20). Registry de contratos do repo real: tocar qualquer padrao abaixo torna o patch INELEGIVEL para PATCH (vira ESTRUTURAL).",
+  "entradas": [
+    {
+      "id": "CT-001",
+      "area": "KF-MODELO-DADOS",
+      "tipo": "schema",
+      "padrao": "src/db/database.ts",
+      "descricao": "SCHEMA (DDL unico), getDb() singleton, persist() debounce — dado do usuario, classe ESTRUTURAL (DEC-006)"
+    },
+    {
+      "id": "CT-002",
+      "area": "KF-PERSISTENCIA-LOCAL",
+      "tipo": "contrato-exportado",
+      "padrao": "src/db/idb.ts",
+      "descricao": "porta unica para IndexedDB: loadDbBytes / saveDbBytes (life-tracker/sqlite/main)"
+    },
+    {
+      "id": "CT-003",
+      "area": "KF-GOV",
+      "tipo": "snapshot",
+      "padrao": "LILA-DEV/planejamento/snapshots/**",
+      "descricao": "snapshots de decisao (SP/FR) — espelho retroativo as-built (DEC-009)"
+    }
+  ]
+}

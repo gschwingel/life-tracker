@@ -1,0 +1,291 @@
+[
+  {
+    "id": "einv-dev",
+    "kind": "module",
+    "module": "scripts/injetar-einv-dev.cjs",
+    "derived_paths": [
+      { "path": ".clinerules", "module_key": "clinerules" },
+      { "path": "LILA-DEV/README-DEV-AI.md", "module_key": "readme" }
+    ],
+    "sources": [
+      {
+        "type": "file",
+        "path_or_cmd": "src/prompts/Canonical/FDV-E.md §4 [normative schema]",
+        "path": "src/prompts/Canonical/FDV-E.md",
+        "locator": "§4 [normative schema] — corpo verbatim (E-INV-01..18)"
+      }
+    ],
+    "checker_rule": "module-regen-paridade-arquivo-inteiro",
+    "generator": "scripts/injetar-einv-dev.cjs",
+    "regen_cmd": "node scripts/injetar-einv-dev.cjs"
+  },
+  {
+    "id": "protocolo-indices-rule3",
+    "kind": "block",
+    "derived_path": "LILA-DEV/PROTOCOLO-INDICES.md",
+    "derived_block_marker": {
+      "begin": "<!-- GENERATED: protocolo-indices-rule3 DO NOT EDIT — source: measured wc -l -c on LILA-DEV/indice-rastreabilidade.json, indice-vetorial.json, indice-vetorial.bin (gerador: scripts/gerar-docs-derivados.cjs) -->",
+      "end": "<!-- /GENERATED: protocolo-indices-rule3 -->"
+    },
+    "sources": [
+      {
+        "type": "measure",
+        "path_or_cmd": "wc -l -c <paths> (medido a cada regen, sem timestamp)",
+        "paths": [
+          "LILA-DEV/indice-rastreabilidade.json",
+          "indice-vetorial.json",
+          "indice-vetorial.bin"
+        ]
+      },
+      {
+        "type": "template",
+        "path_or_cmd": "scripts/gerar-docs-derivados.cjs — renderRule3()",
+        "path": "scripts/gerar-docs-derivados.cjs",
+        "locator": "renderRule3()"
+      }
+    ],
+    "formula": "campo de tamanho = medido wc -l -c no regen (sem carimbo manual, sem data); arquivo sob LFS = bytes do campo `size` do PONTEIRO (estado do repo, nunca do smudge) e sem contagem de linhas; bytes/linhas sempre sobre o conteudo NORMALIZADO (LF) — imune ao EOL do checkout (REPARO 5c)",
+    "lfs_aware": true,
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair protocolo-indices-rule3"
+  },
+  {
+    "id": "scripts-readme-table",
+    "kind": "block",
+    "derived_path": "scripts/README.md",
+    "derived_block_marker": {
+      "begin": "<!-- GENERATED: scripts-readme-table DO NOT EDIT — source: fs scripts/*.cjs + package.json#scripts + header de cada script MINUS dead-scripts list LILA-DEV/INDICES.md (ancora Mortos em REANC-L4) (gerador: scripts/gerar-docs-derivados.cjs) -->",
+      "end": "<!-- /GENERATED: scripts-readme-table -->"
+    },
+    "sources": [
+      {
+        "type": "glob",
+        "path_or_cmd": "ls scripts/*.cjs (topo, apenas arquivos)",
+        "path": "scripts"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "package.json#scripts (mapeamento script -> npm run)",
+        "path": "package.json",
+        "locator": "$.scripts"
+      },
+      {
+        "type": "header",
+        "path_or_cmd": "primeiro bloco de comentario de cada scripts/*.cjs (ate 40 linhas)",
+        "path": "scripts"
+      },
+      {
+        "type": "deadlist",
+        "path_or_cmd": "dead-scripts list declared in LILA-DEV/INDICES.md (anchor Mortos em REANC-L4) + aliases com procedencia declarada no registry",
+        "path": "LILA-DEV/INDICES.md",
+        "anchor": "Mortos em REANC-L4",
+        "fallback_paths": ["LILA-DEV/PROTOCOLO-INDICES.md"],
+        "literal_regex": "`([a-z0-9-]+\\.cjs)`",
+        "aliases": [
+          {
+            "prose": "o índice reverso",
+            "script": "gerar-indice-reverso.cjs",
+            "declared_at": "LILA-DEV/INDICES.md §2 COBERTURA — Mortos em REANC-L4 (2026-09-20), sentenca I1"
+          },
+          {
+            "prose": "a matriz de cobertura",
+            "script": "gerar-matriz-cobertura.cjs",
+            "declared_at": "LILA-DEV/INDICES.md §2 COBERTURA — Mortos em REANC-L4 (2026-09-20), sentenca I3"
+          }
+        ]
+      }
+    ],
+    "formula": "alive = filesystem_present - dead_listed",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair scripts-readme-table"
+  },
+  {
+    "id": "readme-tactical-areas",
+    "kind": "block",
+    "derived_path": "LILA-DEV/README-DEV-AI.md",
+    "derived_block_marker": {
+      "begin": "<!-- GENERATED: readme-tactical-areas DO NOT EDIT — source: LILA-DEV/planejamento/grafo.json (campo area_tatica) + LILA-DEV/kf-fonte.yaml (congelamento.areas_historicas) (gerador: scripts/gerar-docs-derivados.cjs) -->",
+      "end": "<!-- /GENERATED: readme-tactical-areas -->"
+    },
+    "sources": [
+      {
+        "type": "file",
+        "path_or_cmd": "distinct(area_tatica) em LILA-DEV/planejamento/grafo.json (keyframes + sprints + frames)",
+        "path": "LILA-DEV/planejamento/grafo.json",
+        "locator": "colecoes keyframes/sprints/frames — campo area_tatica"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "LILA-DEV/kf-fonte.yaml — congelamento.areas_historicas + kfs_padrao/kfs_produto (particionamento KF-area)",
+        "path": "LILA-DEV/kf-fonte.yaml",
+        "locator": "congelamento.areas_historicas; kfs_padrao; kfs_produto"
+      }
+    ],
+    "formula": "areas_ativas = distinct(area_tatica, grafo.json); historicas = kf-fonte.yaml congelamento.areas_historicas; total = ativas + historicas",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair readme-tactical-areas"
+  },
+  {
+    "id": "deploy-tables",
+    "kind": "block",
+    "derived_path": "docs/DEPLOY.md",
+    "derived_block_markers": [
+      {
+        "key": "deploy-env",
+        "begin": "<!-- GENERATED: deploy-env DO NOT EDIT — source: .env.example + backend/.env.example (chaves apenas, nunca valores) (gerador: scripts/gerar-docs-derivados.cjs) -->",
+        "end": "<!-- /GENERATED: deploy-env -->"
+      },
+      {
+        "key": "deploy-workflows",
+        "begin": "<!-- GENERATED: deploy-workflows DO NOT EDIT — source: .github/workflows/*.yml (name + on + jobs) (gerador: scripts/gerar-docs-derivados.cjs) -->",
+        "end": "<!-- /GENERATED: deploy-workflows -->"
+      },
+      {
+        "key": "deploy-railway",
+        "begin": "<!-- GENERATED: deploy-railway DO NOT EDIT — source: .railway/railway.ts (recursos/config — nomes apenas) (gerador: scripts/gerar-docs-derivados.cjs) -->",
+        "end": "<!-- /GENERATED: deploy-railway -->"
+      }
+    ],
+    "sources": [
+      {
+        "type": "file",
+        "path_or_cmd": "chaves de .env.example (linhas KEY= / # KEY= — nunca valores)",
+        "path": ".env.example",
+        "locator": "^-{0,1}[A-Z][A-Z0-9_]+="
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "chaves de backend/.env.example (linhas KEY= / # KEY= — nunca valores)",
+        "path": "backend/.env.example",
+        "locator": "^-{0,1}[A-Z][A-Z0-9_]+="
+      },
+      {
+        "type": "glob",
+        "path_or_cmd": ".github/workflows/*.yml (name + gatilhos `on` + jobs)",
+        "path": ".github/workflows"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": ".railway/railway.ts (project/server/volume — nomes e estrutura, nunca valores)",
+        "path": ".railway/railway.ts",
+        "locator": "project(); service(); postgres(); volume(); resources[]; env keys"
+      }
+    ],
+    "formula": "env_keys = union(chaves dos 2 .env.example); workflows = fs .github/workflows/*.yml; railway = nomes/estrutura do IaC (sem valores)",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair deploy-tables"
+  },
+  {
+    "id": "localstorage-keys",
+    "kind": "block",
+    "derived_path": "docs/LOCALSTORAGE-KEYS.md",
+    "derived_block_marker": {
+      "begin": "<!-- GENERATED: localstorage-keys DO NOT EDIT — source: varredura de codigo src/lib (localStorage/sessionStorage) MINUS mortas declaradas em src/lib/storage-hygiene.ts + src/lib/softcontext.ts (gerador: scripts/gerar-docs-derivados.cjs) -->",
+      "end": "<!-- /GENERATED: localstorage-keys -->"
+    },
+    "sources": [
+      {
+        "type": "glob",
+        "path_or_cmd": "varredura src/lib/**/*.ts(x) com acesso a localStorage/sessionStorage (conjunto resolvido no regen)",
+        "path": "src/lib"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "src/lib/storage-hygiene.ts — arrays DEAD_STORAGE_KEYS / DEAD_SESSION_KEYS",
+        "path": "src/lib/storage-hygiene.ts",
+        "locator": "export const DEAD_* (literal de array)"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "src/lib/softcontext.ts — declaracoes de morte em comentario (lila_drive_context_*, lila_lila_context_*)",
+        "path": "src/lib/softcontext.ts",
+        "locator": "linhas de comentario com regex de morte declarada"
+      }
+    ],
+    "formula": "alive = code_found - dead_declared (mortas nunca listadas como vivas; colisao morta x codigo reportada)",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair localstorage-keys"
+  },
+  {
+    "id": "tests-structure",
+    "kind": "block",
+    "derived_path": "docs/TESTING.md",
+    "derived_block_markers": [
+      {
+        "key": "tests-path-gate",
+        "begin": "<!-- GENERATED: tests-path-gate DO NOT EDIT — source: vitest.config.ts + backend/vitest.config.ts (test.coverage.thresholds) + LILA-DEV/kfs/kf-testes.md (gerador: scripts/gerar-docs-derivados.cjs) -->",
+        "end": "<!-- /GENERATED: tests-path-gate -->"
+      },
+      {
+        "key": "tests-e2e-gold",
+        "begin": "<!-- GENERATED: tests-e2e-gold DO NOT EDIT — source: test/e2e/*.spec.ts (filesystem) + LILA-DEV/kfs/kf-testes.md (gerador: scripts/gerar-docs-derivados.cjs) -->",
+        "end": "<!-- /GENERATED: tests-e2e-gold -->"
+      }
+    ],
+    "sources": [
+      {
+        "type": "glob",
+        "path_or_cmd": "test/e2e/*.spec.ts (filesystem — ground truth da gold list; padrao g<N>-*.spec.ts)",
+        "path": "test/e2e"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "LILA-DEV/kfs/kf-testes.md (fonte viva da politica de testes; o KF congelado C2 tem guard fail-closed no gerador — nunca citado como fonte)",
+        "path": "LILA-DEV/kfs/kf-testes.md"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "PATH-GATE ground truth (frontend): vitest.config.ts — campo test.coverage.thresholds",
+        "path": "vitest.config.ts",
+        "locator": "test.coverage.thresholds"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "PATH-GATE ground truth (backend): backend/vitest.config.ts — campo test.coverage.thresholds",
+        "path": "backend/vitest.config.ts",
+        "locator": "test.coverage.thresholds"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "comandos vivos resolvidos de package.json + backend/package.json (test:coverage / test:e2e / test:ci)",
+        "path": "package.json",
+        "locator": "$.scripts"
+      }
+    ],
+    "formula": "structure = filesystem (test/e2e) ∪ vitest thresholds mapping; numbers excluded (volatile numbers read-time only via --live)",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair tests-structure"
+  },
+  {
+    "id": "docs-catalog",
+    "kind": "block",
+    "derived_path": "docs/README.md",
+    "derived_block_marker": {
+      "begin": "<!-- GENERATED: docs-catalog DO NOT EDIT — source: meta line + first heading of docs/*.md (except README) + docs/manifest-fonte.yaml header (gerador: scripts/gerar-docs-derivados.cjs) -->",
+      "end": "<!-- /GENERATED: docs-catalog -->"
+    },
+    "sources": [
+      {
+        "type": "glob",
+        "path_or_cmd": "docs/*.md (exceto README.md) — meta line (version, last_update, status) + primeiro heading (titulo)",
+        "path": "docs"
+      },
+      {
+        "type": "file",
+        "path_or_cmd": "docs/manifest-fonte.yaml — versao_manifesto + last_update",
+        "path": "docs/manifest-fonte.yaml",
+        "locator": "versao_manifesto; last_update"
+      }
+    ],
+    "formula": "catalog = union(docs/*.md meta lines + titles, manifest-fonte.yaml header); no timestamps; README excluded from itself",
+    "checker_rule": "block-regen-and-diff-normalizado",
+    "generator": "scripts/gerar-docs-derivados.cjs",
+    "regen_cmd": "node scripts/gerar-docs-derivados.cjs --pair docs-catalog"
+  }
+]

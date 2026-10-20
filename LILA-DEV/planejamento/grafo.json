@@ -1,0 +1,86 @@
+{
+  "projeto": "life-tracker",
+  "versao": "2026-10-20",
+  "nota": "Bootstrap retroativo (DEC-009, 2026-10-20): espelho mecanico do rascunho as-built. Autoridade de comportamento continua sendo LILA-DEV/PROJETO/ESTADO-ATUAL.md; em conflito, PROJETO/ prevalece.",
+  "keyframes": [
+    { "id": "KF-DOC", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    { "id": "KF-INDICES", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    { "id": "KF-TESTES", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    { "id": "KF-GOV", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    { "id": "KF-FERRAMENTAS", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    { "id": "KF-TELEMETRIA", "estado": "🔴", "depende_de": [], "desbloqueia": [] },
+    {
+      "id": "KF-UI-HOJE",
+      "estado": "🟢",
+      "area_tatica": "KF-UI-HOJE",
+      "depende_de": [],
+      "desbloqueia": ["SP-01"],
+      "snapshot": "LILA-DEV/kfs/kf-ui-hoje.md"
+    },
+    {
+      "id": "KF-MODELO-DADOS",
+      "estado": "🟢",
+      "area_tatica": "KF-MODELO-DADOS",
+      "depende_de": [],
+      "desbloqueia": [],
+      "snapshot": "LILA-DEV/kfs/kf-modelo-dados.md"
+    },
+    {
+      "id": "KF-PERSISTENCIA-LOCAL",
+      "estado": "🟢",
+      "area_tatica": "KF-PERSISTENCIA-LOCAL",
+      "depende_de": [],
+      "desbloqueia": [],
+      "snapshot": "LILA-DEV/kfs/kf-persistencia-local.md"
+    },
+    {
+      "id": "KF-PWA-BUILD",
+      "estado": "🟢",
+      "area_tatica": "KF-PWA-BUILD",
+      "depende_de": [],
+      "desbloqueia": [],
+      "snapshot": "LILA-DEV/kfs/kf-pwa-build.md"
+    }
+  ],
+  "sprints": [
+    {
+      "id": "SP-01",
+      "pai": "KF-UI-HOJE",
+      "estado": "🟢",
+      "area_tatica": "KF-UI-HOJE",
+      "protocolo_governante": "KF-UI-HOJE",
+      "depende_de": [],
+      "desbloqueia": ["FR-01", "FR-02", "FR-03"],
+      "snapshot": "LILA-DEV/planejamento/snapshots/sprints/SP-01.md"
+    }
+  ],
+  "frames": [
+    {
+      "id": "FR-01",
+      "pai": "SP-01",
+      "estado": "🟢",
+      "area_tatica": "KF-UI-HOJE",
+      "depende_de": [],
+      "desbloqueia": ["FR-02"],
+      "snapshot": "LILA-DEV/planejamento/snapshots/frames/FR-01.md"
+    },
+    {
+      "id": "FR-02",
+      "pai": "SP-01",
+      "estado": "🟢",
+      "area_tatica": "KF-UI-HOJE",
+      "depende_de": ["FR-01"],
+      "desbloqueia": [],
+      "snapshot": "LILA-DEV/planejamento/snapshots/frames/FR-02.md"
+    },
+    {
+      "id": "FR-03",
+      "pai": "SP-01",
+      "estado": "🟢",
+      "area_tatica": "KF-PWA-BUILD",
+      "depende_de": ["FR-01"],
+      "desbloqueia": [],
+      "snapshot": "LILA-DEV/planejamento/snapshots/frames/FR-03.md"
+    }
+  ]
+}

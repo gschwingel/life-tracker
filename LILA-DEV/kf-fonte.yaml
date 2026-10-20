@@ -1,0 +1,101 @@
+# LILA-DEV/kf-fonte.yaml — fonte de curadoria de KFs-área (life-tracker)
+# Bootstrap retroativo: formaliza o rascunho as-built. Decisão: DEC-009 (2026-10-20).
+# Normativo: LILA-DEV/FDV-PLAN.md §2-§5 + schema de entrada de scripts/kf-compiler.cjs.
+# Regra: kfs_padrao = herdados do framework (origem: framework); kfs_produto = SOMENTE o observado no draft.
+meta:
+  version: 1.0
+  frozen: 2026-10-20
+  idioma_saida: en-dense
+  saida_dir: LILA-DEV/kfs/
+  lastro: leitura direta de package.json, index.html, vite.config.mjs e src/** em 2026-10-20
+
+kfs_padrao:
+  - slug: KF-DOC
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Project documentation as auditable trail: FDVs, protocols, decision records, snapshots and
+      derived docs. Freshness is a gate, not a habit; prose never outranks the document it describes.
+    fronteiras: >
+      Documentation OF a subsystem follows that subsystem's KF-area; only the discipline lives here.
+  - slug: KF-INDICES
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Indices are derived artifacts (reverse, semantic, traceability, vectorial) that must stay
+      fresh against their sources. An index is never authoritative over the file it indexes.
+    fronteiras: >
+      An index OF a specific domain follows that domain's KF-area.
+  - slug: KF-TESTES
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Test strategy, suites, fixtures and the selection of what must run per change class.
+      A change without executable proof is unverified by construction.
+    fronteiras: >
+      Test code OF a subsystem is produced under that subsystem's KF-area; the strategy lives here.
+  - slug: KF-GOV
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Process governance: mode routing, invariants, gates, canonical signals and the decision
+      ledger — how work is admitted, executed and closed, with human agency preserved.
+    fronteiras: >
+      Product behavior never lives here; governance records the decision, it does not define the rule.
+  - slug: KF-FERRAMENTAS
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Tooling and automation surface: scripts, validators, generators and agent-facing utilities,
+      including their active / reactivatable / inert status under the local protocol.
+    fronteiras: >
+      A tool OF a domain is owned by that domain's KF-area; only shared tooling lives here.
+  - slug: KF-TELEMETRIA
+    origem: framework
+    eixo: capacidade
+    escopo: >
+      Runtime observability: logs, metrics, evidence artifacts and freshness telemetry used to
+      prove that a declared state matches the executed state.
+    fronteiras: >
+      User business data is not telemetry; user records follow the data KF-area.
+
+kfs_produto:
+  - slug: KF-UI-HOJE
+    origem: projeto
+    eixo: componente
+    escopo: >
+      Single screen "Hoje" (`src/App.tsx`): five blocks (peso, treino, cardio, estudo, aporte),
+      load of the current day on mount, save button with upsert and a 2s "Salvo ✓" confirmation.
+      No routing, no history, no date navigation, no charts, no auth.
+    fronteiras: >
+      Styling lives here only as it serves this screen; schema belongs to KF-MODELO-DADOS and
+      storage bytes to KF-PERSISTENCIA-LOCAL. A second screen/route requires a new decision.
+  - slug: KF-MODELO-DADOS
+    origem: projeto
+    eixo: componente
+    escopo: >
+      Single DDL source `SCHEMA` in `src/db/database.ts`: daily_logs (EAV keyed by dia+domain),
+      cardio_logs (one row per dia), invest_transactions (aporte per data) and portfolio_positions
+      (declared, unused). CREATE TABLE IF NOT EXISTS only — no migration path exists.
+    fronteiras: >
+      Query/write call sites belong to KF-UI-HOJE until a data layer exists; byte storage belongs
+      to KF-PERSISTENCIA-LOCAL. Column/table changes are ESTRUTURAL (DEC-006).
+  - slug: KF-PERSISTENCIA-LOCAL
+    origem: projeto
+    eixo: capacidade
+    escopo: >
+      sql.js (WASM) in-memory database, exported to bytes and stored in a single IndexedDB
+      database `life-tracker` / store `sqlite` / key `main`. Writes go through `persist()` with a
+      300 ms debounce; that is the only persistence path. No backup, no export, no network.
+    fronteiras: >
+      Schema ownership belongs to KF-MODELO-DADOS. Sync/backup do not exist and would be a new
+      capability (P1 before any code).
+  - slug: KF-PWA-BUILD
+    origem: projeto
+    eixo: capacidade
+    escopo: >
+      Vite 6 build with @vitejs/plugin-react and vite-plugin-pwa (manifest, autoUpdate,
+      icons 192/512), static output in `dist/`, deployed to Vercel. Gate is typecheck + local
+      governance validator + build; there is no test runner, lint or CI in the repo.
+    fronteiras: >
+      Runtime app behavior belongs to KF-UI-HOJE; only build, manifest and install surface live here.

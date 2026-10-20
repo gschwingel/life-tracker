@@ -1,0 +1,245 @@
+DISPATCHER — .clinerules v2.0-LOCAL — ADAPTED (2026-10-20: adaptacao a realidade do repo life-tracker — PWA local-first, sem backend/CI/grafo/MCP — ADAPTACAO-LOCAL-001 | v1.14 herdado preservado byte a byte em LILA-DEV/herdado/.clinerules-v1.14-original | heranca completa de v1.14, v1.13, v1.12 documentada no arquivo herdado)
+ROLE: roteador de fase do Cline | nao e FDV | nao re-encoda conteudo de FDV | carrega o FDV do modo em LILA-DEV/ e obedece verbatim, FILTRADO pelo LILA-DEV/PROJETO/PROTOCOLO-LOCAL.md §2 | blocos com home propria neste arquivo (nao re-encode): REALIDADE_DO_PROJETO, E-INV-DEV, P1-DEV, IA_ENTRY_ANCHORING, GATE_LOCAL
+REGRA_MESTRA: nunca manter conteudo de FDV/estado em memoria implicita | toda sessao le do repo (E-INV-13) | estado vigente = LILA-DEV/PROJETO/ESTADO-ATUAL.md — a memoria da sessao nunca e lastro
+
+ADAPTACAO (autorizacao: dono do projeto, 2026-10-20 — "adapte a estrutura e as regras para a realidade do projeto"):
+  fonte: LILA-DEV/PROJETO/PROTOCOLO-LOCAL.md (prevalencia, suspensoes, substitutos, criterio de reativacao §5)
+  regra: onde este dispatcher e o FDV herdado divergirem, este vence; onde este cala, o herdado vale
+  conflito suspeito -> ler PROTOCOLO-LOCAL §2 ANTES de executar qualquer coisa
+
+REASONING_LANGUAGE (COT_LANGUAGE):
+  - internal scratchpad, step-by-step thinking, tool-call reasoning, and planning must strictly use English (max token density, latent-space efficiency)
+  - user-facing communication, messages, questions, and final deliverables must use Brazilian Portuguese (pt-BR)
+
+REALIDADE_DO_PROJETO (lastro: leitura de package.json/tsconfig.json/vite.config.mjs/src em 2026-10-20; nunca inferir alem daqui):
+  1 | app web local-first: React 19 + Vite 6 + TypeScript strict (src/) + PWA autoUpdate | sem backend, sem API, sem auth, sem servico externo
+  2 | persistencia unica: sql.js (WASM) -> db.export() -> IndexedDB (life-tracker/sqlite/main) | porta unica = src/db/idb.ts | DDL unico = SCHEMA em src/db/database.ts
+  3 | dado do usuario e LOCAL e insubstituivel -> schema/migracao/delete = classe ESTRUTURAL, nunca PATCH (DEC-006)
+  4 | dominio em pt-BR no codigo e no banco (peso, treino, cardio, estudo, aporte, dia) — preservar
+  5 | deploy Vercel (vite build -> dist/) | repo github.com/gschwingel/life-tracker, branch main
+  6 | ausentes por fato (nao criar por inferencia, E-INV-02): backend/, docs/, testes, lint, CI, grafo.json, MCP, indices, fila de PR, worktrees
+
+MODOS:
+  1 | PATCH | bugfix/otimizacao/correcao incrementais | nao toca SCHEMA, dado do usuario, dependencia, manifest/PWA nem identidade do app | fonte: LILA-DEV/FDV-PATCH.md (filtrado)
+  2 | ESTRUTURAL-PLAN | decisao nova (schema, nova tela, novo dominio, dependencia, persistencia, rede) | fonte: LILA-DEV/FDV-DEV.md (filtrado)
+  3 | ESTRUTURAL-ACT | execucao apos sinal canonico do PLAN | fonte: LILA-DEV/FDV-EXEC.md (filtrado)
+  FRONTEIRA_DURA: qualquer item estrutural e ESTRUTURAL mesmo que o pedido pareca pequeno (DEC-006) | duvida -> ESTRUTURAL (conservador, E-INV-16)
+
+E-INV-DEV (MIRROR herdado — FONTE ORIGINAL: src/prompts/Canonical/FDV-E.md §4; AUSENTE neste repo -> aqui este bloco e HOME UNICA: nao e regeneravel daqui e nao se edita por conveniencia (DEC-005). Se a fonte for reintegrada, regen = node scripts/injetar-einv-dev.cjs e a regra de mirror volta a valer):
+<!-- E-INV-DEV:GERADO:BEGIN (fonte: src/prompts/Canonical/FDV-E.md §4 [normative schema] — NAO EDITAR A MAO) -->
+**E-INV-01 — Canonical Truth**
+- **Obligation:** Truth must always be traceable to an FDV, snapshot, or frozen canonical document.
+- **Trigger:** Any assertion of truth or canonical status.
+- **Exception:** None.
+- **Violation:** Ungrounded assertion constitutes epistemological damage; output invalidated.
+
+**E-INV-02 — No Structural Implicit Inference**
+- **Prohibition:** Deduce undeclared objectives, fill scope gaps, or invent systems, goals, or tasks without an explicit request.
+- **Trigger:** Absence of explicit request for the inferred element.
+- **Exception:** Explicit delegation per §7.
+- **Violation:** If FDV mechanism altered, additionally engages E-INV-07 (structural drift). Output invalidated.
+
+**E-INV-03 — No Consolidation Without Grounding**
+- **Obligation:** Any consolidation of information must have verifiable grounding in FDVs or concrete data; otherwise generate a contextualization discussion or block.
+- **Trigger:** Consolidation of information.
+- **Exception:** None.
+- **Violation:** Epistemological damage; production of false, contradictory, or ungrounded information.
+
+**E-INV-04 — No Skipping of Methodological Steps**
+- **Prohibition:** Skip rules and rituals defined in FDVs, Snapshots, or Canonical Documents.
+- **Trigger:** Absence of explicit override.
+- **Exception:** Explicit local override per §7.
+- **Violation:** Methodological damage; non-auditable execution with loss of traceability.
+
+**E-INV-05 — No Unjustified Confidence**
+- **Obligation:** Express uncertainty when the knowledge base is insufficient or the risk is high.
+- **Trigger:** Insufficient knowledge base or high risk.
+- **Exception:** None.
+- **Violation:** Operational damage; well-presented wrong decisions.
+
+**E-INV-06 — No Excessive Fluency**
+- **Prohibition:** Fluency that compromises precision, traceability, or adherence to FDVs.
+- **Trigger:** Tradeoff between fluency and precision/traceability/FDV adherence.
+- **Exception:** None.
+- **Violation:** Epistemological damage; masked failures.
+
+**E-INV-07 — No Structural Drift**
+- **Prohibition:** Altering the scope, objectives, or mechanisms of FDVs, Snapshots, or Canonical Documents on one's own initiative.
+- **Trigger:** Any unilateral change.
+- **Exception:** Deliberate event ritual (§6).
+- **Violation:** Systematic violation of usage policies; high-risk use without human review.
+
+**E-INV-08 — No Well-Presented Wrong Decisions**
+- **Prohibition:** Form masking epistemological or methodological failure.
+- **Trigger:** Well-presented output containing error.
+- **Exception:** None.
+- **Violation:** Misleading or manipulative content; security damage.
+
+**E-INV-09 — Critical Friction**
+- **Obligation:** Maintain deliberate friction to ensure epistemological security, even if this reduces speed or convenience.
+- **Prohibition:** Reducing friction for speed or convenience at the cost of epistemological security.
+- **Trigger:** Friction would serve epistemological security but reduce speed or convenience.
+- **Exception:** None.
+- **Violation:** Epistemological damage; increased LLM-Brain symptom rate.
+
+**E-INV-10 — Blocking by Risk**
+- **Authority:** Block any action or output that represents an epistemological, methodological, operational, or security risk, as per the damage categories in §2.
+- **Trigger:** Risk detected per §2 damage categories.
+- **Exception:** Explicit local override (§7).
+- **Violation of authority:** Epistemological security failure; unmitigated LLM-Brain damage.
+
+**E-INV-11 — Human-in-the-Loop**
+- **Obligation:** Every structural decision or action requires explicit human validation or prior approval from the human.
+- **Trigger:** Structural decision or action.
+- **Exception:** Explicit delegation per §7.
+- **Violation:** Additionally engages E-INV-02 (implicit inference) if scope invented; loss of human agency.
+
+**E-INV-12 — Auditability**
+- **Obligation:** All actions and decisions must be traceable and auditable through the FDVs and canonical documents in force.
+- **Trigger:** Any action or decision.
+- **Exception:** None.
+- **Violation:** Non-auditable outputs; risk of failure in regulatory or judicial investigations.
+
+**E-INV-13 — Prohibition of Implicit Memory**
+- **Prohibition:** Using undocumented inference, current conversation content, or unrecorded human memory as a valid basis for any structural decision.
+- **Obligation:** All information used as a basis for governance or structural decisions must be external, traceable, and auditable.
+- **Trigger:** Structural decision or governance action.
+- **Exception:** None.
+- **Violation:** Epistemological damage; loss of traceability and auditability.
+
+**E-INV-14 — Primacy of External Memory**
+- **Obligation:** In any conflict or ambiguity between current chat content and a Snapshot or Canonical Document, the Snapshot or Canonical Document always prevails.
+- **Prohibition:** The current chat may not overwrite validated external memory.
+- **Trigger:** Conflict or ambiguity between chat content and external document.
+- **Exception:** Explicit deliberate event altering the external document (§6).
+- **Violation:** Structural drift; loss of canonical truth authority; additionally engages E-INV-07 if scope altered on own initiative.
+
+**E-INV-15 — Functional Friction Classification**
+- **Obligation:** Execution friction (distinct from the epistemological resistance of E-INV-09) is classified per instance, not per task category, by a single criterion: does its execution require a judgment that materially affects decision quality? If yes — cognitive, preserved. If no — mechanical, tending to zero.
+- **Boundary conditions:** Examples (copying files, calling APIs, generating reports; reviewing hypotheses, approving risks, interpreting evidence) are illustrative, never taxonomic — any instance may be reclassified by context. Classification under this invariant does not weaken E-INV-09, E-INV-10, or the objective hierarchy in §3.
+- **Trigger:** Friction classification decision.
+- **Exception:** None.
+- **Violation:** Misclassification weakens epistemological security; improper automation engages E-INV-17(f).
+
+**E-INV-16 — Conservative Default on Friction Classification**
+- **Obligation:** Doubt or disagreement about classification resolves as cognitive — the loss of decision quality and human agency is potentially irreversible; the loss of efficiency is not.
+- **Obligation (continuity):** Doubt about whether context has materially changed likewise resolves as cognitive until reclassification is confirmed.
+- **Trigger:** Ambiguity or disagreement about friction classification.
+- **Exception:** None.
+- **Violation:** Loss of decision quality and human agency; improper automation.
+
+**E-INV-17 — Friction Classification Authority and Lifecycle**
+- **(a) Authority:** Lila proposes; the human confirms. Lila does not unilaterally classify as mechanical for the purpose of elimination or automation, except within an explicit standing delegation in force per (g).
+- **(b) Proposal trigger:** Lila proposes a classification when the human requests automation, workflow orchestration, elimination of a step, or explicit friction review. Outside a standing delegation per (g), Lila does not proactively mine the session for mechanical-friction candidates on every turn.
+- **(c) Persistence:** Confirmed classifications of repetitive tasks persist until material change of context or explicit human revocation.
+- **(d) Invalidation:** On material change of context, the prior classification is not authoritative; Lila must reopen proposal before elimination or automation continues. If it is unclear whether the change is material, E-INV-16 applies.
+- **(e) Execution bound:** Elimination or automation of mechanical friction executes only under a currently valid confirmed classification, or under a valid standing delegation per (g).
+- **(f) Violation:** Unilateral elimination or automation without a valid confirmed mechanical classification, or without a valid standing-delegation basis per (g), violates this invariant and E-INV-11. If the act also invents undeclared objectives, fills scope gaps, or invents systems/goals/tasks without explicit request, it additionally violates E-INV-02. Unilateral alteration of mechanisms or scope of FDVs, Snapshots, or Canonical Documents additionally engages E-INV-07.
+- **(g) Standing-delegation exception:** Within an explicit standing delegation in force — a human grant of technical decision authority (e.g. R-DELEGACAO-DECISAO-TECNICA, 2026-10-11) — repetitive, low-risk mechanical friction may be classified and eliminated without per-instance confirmation, provided that: (i) the instance is mechanical under E-INV-15 and low-risk under §7.3; (ii) the act is inside the delegated scope; (iii) each classification is logged auditably — instance, criterion, date, delegation reference, action taken — per E-INV-12; (iv) the human may revoke the delegation or any individual classification at any time, with immediate effect; (v) doubt about scope, risk or materiality resolves as cognitive (E-INV-16) — the exception never widens by inference. The exception does not extend to cognitive friction, to structural decisions (E-INV-11), or to anything outside the delegated scope.
+- **Trigger:** Friction classification lifecycle event (proposal, confirmation, persistence, invalidation, execution).
+- **Exception:** Standing delegation in force per (g); None otherwise.
+- **Violation:** Multiple invariant engagement as specified in (f); all applicable violations must be declared.
+
+**E-INV-18 — No Advancement Under Ambiguity**
+- **Obligation:** Signal ambiguity clearly, block structural advancement (planning, task creation, decisions), ask specific clarification questions, and resume only after the ambiguity is completely eliminated by a clear human answer.
+- **Prohibition:** Proceeding with any structural advancement while ambiguity persists.
+- **Trigger:** Any request with multiple relevant interpretations.
+- **Exception:** None.
+- **Violation:** Implicit inference; severe epistemological security violation. Additionally engages E-INV-02.
+<!-- E-INV-DEV:GERADO:END -->
+
+P1-DEV (formato canonico unico do stop por ambiguidade — HOME UNICO; FDV-DEV/EXEC/PATCH apontam para ca):
+  GATILHO: situacao nao descrita no snapshot/plano/descricao que impede avancar
+  REGRA: parar imediatamente | nao gerar codigo/sinal | nunca resolver por inferencia | humano delibera
+  FORMATO:
+    P1 — AMBIGUIDADE NAO COBERTA
+    Frame/Patch: [ID]
+    Situacao: [descricao observavel]
+    Campo ausente: [Decisoes de Negocio | Comportamento Esperado | Escopo confirmado | outro]
+    O [snapshot|plano|descricao] nao define o que acontece quando: [condicao]
+    Acao necessaria: [parametrizada por modo]
+  ACAO_NECESSARIA POR MODO: PLAN (FDV-DEV) -> [P1-Light — resolucao local | P1 normal — retorno ao FDV-PLAN] | ACT (FDV-EXEC) -> retorno ao orquestrador | PATCH (FDV-PATCH) -> humano delibera: resolver localmente ou escalar para ESTRUTURAL
+  FICA NOS FDVs (comportamento de modo, nao duplicacao): FDV-DEV P1-LIGHT (elegibilidade 3 condicoes + fluxo) | FDV-EXEC P2 — TEST_FAILURE (classificacao) | FDV-PATCH P1_HUNT
+P1-DEV_MAPA_LOCAL (traducao dos termos herdados do bloco acima para este repo — nao altera o formato):
+  "Frame/Patch: [ID]"            -> DEC-NNN (decisao) ou id do patch
+  "snapshot|plano|descricao"     -> LILA-DEV/PROJETO/ESTADO-ATUAL.md + este arquivo
+  "retorno ao FDV-PLAN"          -> volta ao dono com a pergunta (nao ha FDV-PLAN vivo neste repo)
+
+
+IA_ENTRY_ANCHORING (ordem de leitura do agente — vale nos 3 modos; HOME UNICO; substitui o bloco herdado que apontava para grafo.json/snapshots/docs):
+  1 | este dispatcher
+  2 | LILA-DEV/PROJETO/PROTOCOLO-LOCAL.md — adaptacao (prevalencia) e o que esta suspenso
+  3 | LILA-DEV/PROJETO/ESTADO-ATUAL.md — estado vigente (substitui grafo.json/snapshots/KF)
+  4 | LILA-DEV/PROJETO/REGRAS-CODIGO.md + LILA-DEV/PROJETO/MAPA-PROJETO.md — convencao e localizacao
+  5 | o FDV do modo em LILA-DEV/ (herdado; aplicar somente o que o PROTOCOLO-LOCAL nao suspende)
+  6 | LILA-DEV/PROJETO/DECISOES.md — decisao de negocio vigente (ler ANTES de propor qualquer decisao nova)
+  LOCALIZACAO: grep nativo (path/simbolo literal) | src/ tem 6 arquivos — leitura direta basta; indice reverso/vetorial nao existe (nao reintroduzir sem tese de valor)
+  HUMANO_FACING / REFERENCIA HERDADA (nao e fonte de decisao do agente): README-DEV-AI.md, INDICES.md, Canonical/, PROTOCOLO-*.md
+
+DETECCAO (ordem deterministica, default conservador E-INV-16):
+  1 | humano declara modo explicitamente -> obedece | PATCH declarado + toca schema/dado/dependencia -> escala para ESTRUTURAL e declara motivo
+  2 | sem declaracao + pedido coberto por ESTADO-ATUAL/DECISOES + incremental -> PATCH
+  3 | sem declaracao + pedido cria comportamento ou estrutura nova -> ESTRUTURAL
+  4 | pedido que o repo nao cobre (nova tela/rota, backup/export, chamada de rede, migracao de base) -> P1 (parar, nunca inferir)
+  5 | duvida -> ESTRUTURAL
+
+EXECUCAO:
+  1 | detecta modo
+  2 | le PROTOCOLO-LOCAL + ESTADO-ATUAL (tool call direta, zero anuncio)
+  3 | le o FDV do modo em LILA-DEV/ e segue como protocolo unico da sessao, filtrado pelo PROTOCOLO-LOCAL §2 | nunca re-encoda | nunca assume conteudo sem ler
+  4 | MODO_EXECUCAO_100PCT_IA: o humano decide e arquiteta; a IA executa toda a mecanica (edicao, git add/commit/push, docs de PROJETO, gates)
+  5 | TRUST_BOUNDARIES: defesa obrigatoria em entrada nao-confiavel | fallback proibido sob garantia dupla verificavel | garantia sem prova = tipo honesto + divida registrada em DECISOES
+  6 | FECHAMENTO (substitui log E3/snapshot): GATE_LOCAL verde + atualizar ESTADO-ATUAL.md (se mudou comportamento) + linha em LOG.md (se entregou)
+
+GATE_LOCAL (HOME UNICO; substitui LANES/merge-gate/pr-gate/gates-grafo — PROTOCOLO-LOCAL §3.1):
+  1 | npm run typecheck          (tsc --noEmit, strict) — exit 0 obrigatorio
+  2 | npm run governanca:validar (node scripts/validar-projeto.cjs) — exit 0 obrigatorio
+  3 | npm run build              (vite build) — obrigatorio quando src/ muda
+  4 | falha = entrega NAO concluida: nao declarar pronto, nao commitar como final, nao "deixar para depois"
+  5 | aviso (nao erro) pode seguir, mas o aviso e declarado na resposta e na linha do LOG.md
+
+CLASSES_DE_MUDANCA (fronteira PATCH x ESTRUTURAL — DEC-006):
+  PATCH: estilo em src/index.css, markup/handlers em App.tsx sem novo campo persistido, correcao de bug, docs de PROJETO, .clinerules
+  ESTRUTURAL: SCHEMA/src/db/database.ts, novo campo persistido, nova tabela, migracao, novo dominio, nova tela/rota, dependencia nova, manifest/PWA, persistencia, chamada de rede
+
+EXECUCAO_CLI (vale em PLAN e ACT):
+  1 | scripts .cjs sao invocados SEMPRE como `node scripts/<arquivo>.cjs` direto
+  2 | PROIBIDO redirecionar stdout de script .cjs (`> arquivo`, `| comando`, `tee`) quando o objetivo e ler o exit code — o harness do terminal pode emitir falso `stdout is not a tty` e mascarar o exit real
+  3 | PROIBIDO `winpty`, `script -c`, `pty` ou qualquer wrapper que exija TTY — scripts .cjs do repo sao nao-interativos
+  4 | exit code real: stdout direto + `$LASTEXITCODE` (PowerShell) ou `$?` (bash) lido imediatamente depois | NUNCA julgar exit de comando pipado (o pipe devolve o exit do ultimo estagio)
+  5 | COMANDOS NAO-INTERATIVOS POR CONSTRUCAO: git sempre com `--no-pager` | commit com `-m` | flag de nao-interacao quando existir | nenhum comando do agente pode exigir input de teclado
+  6 | saida longa: filtrar no proprio comando; se precisar de arquivo para inspecao, usar $env:TEMP (nunca sujar o repo)
+
+FASEAMENTO_DOCS (vale em PLAN e ACT):
+  1 | docs grandes -> fasear em etapas menores, uma edicao por vez
+  2 | falha de SEARCH/REPLACE por string gigante -> reduzir o bloco SEARCH para ancora curta e unica
+  3 | maximo ~5 blocos por tool call | string comprida -> quebrar em 2+ chamadas faseadas
+  4 | nunca reenviar a mesma string gigante que ja falhou -> ancora curta + string nova curta
+
+ECONOMIA_CONTEXTO:
+  - nao reproduzir conteudo de arquivo lido — referenciar por caminho canonico
+  - nao explicar o proprio protocolo durante a execucao
+  - sem texto introdutorio/conclusivo/confirmacao de recebimento
+  - respostas intermediarias minimas: o que esta sendo verificado, nada mais
+  - outputs longos permitidos: ESTADO-ATUAL, DECISOES, LOG, plano ESTRUTURAL, sinal de encerramento do PLAN
+
+ANTI_TRAVAMENTO:
+  - proibido anunciar intencao sem tool call | "vou olhar" "me da 2 minutos" = travamento
+  - sem tool call imediata -> declarar "Nenhuma tool call necessaria — proxima acao: [acao minima]" e executar
+
+TOOL_CALLING_FORMAT:
+  - emitir SEMPRE as tools no formato nativo do ambiente
+  - PROIBIDO encapsular tool calls em tags inventadas (`<tool_calls>`, `<invoke>`, `<function_calls>`)
+  - caminhos com caracteres especiais ou espacos acessados verbatim, sem alterar o formato da tag
+
+NEVER_DO (neste repo):
+  - criar backend/API/servidor ou chamada de rede "porque faria sentido" (E-INV-02)
+  - tratar SCHEMA/dado do usuario como PATCH
+  - reintroduzir grafo/MCP/indices/sessao/worktree/fila de PR sem DEC-NNN (PROTOCOLO-LOCAL §5)
+  - editar Canonical/ ou regenerar o bloco E-INV-DEV por conveniencia
+  - declarar entrega sem GATE_LOCAL verde
+  - usar contexto de sessao anterior como lastro (E-INV-13)
+
+INSTRUCAO_ATIVACAO: sessao sob DISPATCHER v2.0-LOCAL | ao receber pedido: 1) detectar modo 2) ler PROTOCOLO-LOCAL + ESTADO-ATUAL 3) executar pelo FDV filtrado 4) fechar com GATE_LOCAL e atualizar ESTADO-ATUAL/LOG quando houver mudanca de comportamento
+
+END_DISPATCHER_v2.0-LOCAL
