@@ -5,6 +5,8 @@ import { getDb, persist } from './db/database';
 const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
 const DIAS_HISTORICO = 7;
 
+type Pagina = 'home' | 'saude';
+
 type Form = {
   peso: string;
   treino: boolean;
@@ -12,10 +14,9 @@ type Form = {
   cardioMin: string;
   cardioKm: string;
   cardioInt: string;
-  estudo: boolean;
-  aporte: string;
 };
 
+// D16: 'bike' continua sendo o valor gravado (legado); a UI mostra "Bicicleta".
 const EMPTY: Form = {
   peso: '',
   treino: false,
@@ -23,9 +24,10 @@ const EMPTY: Form = {
   cardioMin: '',
   cardioKm: '',
   cardioInt: '',
-  estudo: false,
-  aporte: '',
 };
+
+// D13: módulos sem tela nesta sprint — botões cinza, sem clique, sem rota.
+const MODULOS = ['Gestão de dopamina', 'Finanças', 'Aviação', 'Self improvement'];
 
 type Resumo = { dia: string; form: Form };
 
@@ -48,21 +50,26 @@ const listarUltimos7Dias = (): string[] => {
 
 const temRegistro = (f: Form): boolean =>
   f.peso.trim() !== '' ||
-  f.aporte.trim() !== '' ||
   f.cardioMin.trim() !== '' ||
   f.cardioKm.trim() !== '' ||
   f.cardioInt.trim() !== '' ||
-  f.treino ||
-  f.estudo;
+  f.treino;
 
-// D9: detalhe de min/km/RPE fica na tela de edição; a linha mostra "tipo Nmin".
+// D16: valor legado/desconhecido cai em 'bike' (Bicicleta); colunas inalteradas.
+const tipoCardio = (tipo: string): string =>
+  tipo === 'esteira' || tipo === 'corrida' ? tipo : 'bike';
+
+const rotuloCardio = (tipo: string): string =>
+  tipoCardio(tipo) === 'esteira' ? 'Esteira' : tipoCardio(tipo) === 'corrida' ? 'Corrida' : 'Bicicleta';
+
+// D9/D17: linha do histórico mostra só peso/treino/cardio.
 const chipCardio = (f: Form): string => {
-  if (f.cardioMin.trim()) return `${f.cardioTipo} ${f.cardioMin.trim()}min`;
-  if (f.cardioKm.trim()) return `${f.cardioTipo} ${f.cardioKm.trim()}km`;
+  if (f.cardioMin.trim()) return `${rotuloCardio(f.cardioTipo)} ${f.cardioMin.trim()}min`;
+  if (f.cardioKm.trim()) return `${rotuloCardio(f.cardioTipo)} ${f.cardioKm.trim()}km`;
   return '—';
 };
 
-// Os três SELECTs de carga, parametrizados pelo dia.
+// SELECTs de carga (peso/treino + cardio), parametrizados pelo dia.
 const lerDia = (db: Database, dia: string): Form => {
   const lido: Form = { ...EMPTY };
 
@@ -74,8 +81,6 @@ const lerDia = (db: Database, dia: string): Form => {
       lido.peso = String(row.value);
     } else if (row.domain === 'treino') {
       lido.treino = row.value === 1;
-    } else if (row.domain === 'estudo') {
-      lido.estudo = row.value === 1;
     }
   }
   stmt.free();
@@ -86,20 +91,12 @@ const lerDia = (db: Database, dia: string): Form => {
   c.bind([dia]);
   if (c.step()) {
     const r = c.getAsObject();
-    lido.cardioTipo = String(r.tipo);
+    lido.cardioTipo = tipoCardio(String(r.tipo));
     lido.cardioMin = r.minutos != null ? String(r.minutos) : '';
     lido.cardioKm = r.distancia_km != null ? String(r.distancia_km) : '';
     lido.cardioInt = r.intensidade != null ? String(r.intensidade) : '';
   }
   c.free();
-
-  const a = db.prepare(`SELECT valor FROM invest_transactions WHERE data = ? AND tipo = 'aporte'`);
-  a.bind([dia]);
-  if (a.step()) {
-    const r = a.getAsObject();
-    lido.aporte = r.valor != null ? String(r.valor) : '';
-  }
-  a.free();
 
   return lido;
 };
@@ -111,9 +108,11 @@ export default function App() {
   const [form, setForm] = useState<Form>(EMPTY);
   const [ready, setReady] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pagina, setPagina] = useState<Pagina>('home');
   const [diaEditando, setDiaEditando] = useState<string | null>(null);
-  const [mostrarDrawer, setMostrarDrawer] = useState(false);
+  const [mostrarHistorico, setMostrarHistorico] = useState(false);
   const [confirmacaoPendente, setConfirmacaoPendente] = useState(false);
+  const [resetPendente, setResetPendente] = useState<string | null>(null);
   const [historico, setHistorico] = useState<Resumo[]>([]);
 
   useEffect(() => {
@@ -129,7 +128,7 @@ export default function App() {
     const db = await getDb();
     setForm(lerDia(db, dia));
     setDiaEditando(dia === today() ? null : dia);
-    setMostrarDrawer(false);
+    setMostrarHistorico(false);
     setConfirmacaoPendente(false);
     setSaved(false);
     setHistorico(await carregarUltimos7Dias(db));
@@ -149,7 +148,6 @@ export default function App() {
     const peso = num(form.peso);
     if (peso != null) upsertDaily('peso', peso);
     upsertDaily('treino', form.treino ? 1 : 0);
-    upsertDaily('estudo', form.estudo ? 1 : 0);
 
     if (form.cardioMin.trim() || form.cardioKm.trim() || form.cardioInt.trim()) {
       db.run(
@@ -161,15 +159,6 @@ export default function App() {
            distancia_km = excluded.distancia_km,
            intensidade = excluded.intensidade`,
         [crypto.randomUUID(), dia, form.cardioTipo, num(form.cardioMin), num(form.cardioKm), num(form.cardioInt)]
-      );
-    }
-
-    db.run(`DELETE FROM invest_transactions WHERE data = ? AND tipo = 'aporte'`, [dia]);
-    const aporte = num(form.aporte);
-    if (aporte != null) {
-      db.run(
-        `INSERT INTO invest_transactions (id, data, tipo, valor) VALUES (?, ?, 'aporte', ?)`,
-        [crypto.randomUUID(), dia, aporte]
       );
     }
 
@@ -193,107 +182,146 @@ export default function App() {
     if (dia != null) await gravar(dia);
   }
 
+  // D18/D19: reset apaga o dia nas 3 tabelas; o dia exibido volta para EMPTY.
+  async function resetDia(dia: string) {
+    const db = await getDb();
+    db.run(`DELETE FROM daily_logs WHERE dia = ?`, [dia]);
+    db.run(`DELETE FROM cardio_logs WHERE dia = ?`, [dia]);
+    db.run(`DELETE FROM invest_transactions WHERE data = ?`, [dia]);
+    persist();
+    if (dia === (diaEditando ?? today())) setForm({ ...EMPTY });
+    setSaved(false);
+    setHistorico(await carregarUltimos7Dias(db));
+  }
+
+  async function confirmarReset() {
+    const dia = resetPendente;
+    setResetPendente(null);
+    if (dia != null) await resetDia(dia);
+  }
+
   const set = (patch: Partial<Form>) => setForm(f => ({ ...f, ...patch }));
 
   if (!ready) return <p className="loading">Carregando…</p>;
 
   const diaAtual = diaEditando ?? today();
 
-  return (
-    <div className="layout">
-      <main className="container">
-        <div className="topo">
-          <h1>{diaEditando ? `Editando ${formatarDia(diaEditando)}` : `Hoje — ${today()}`}</h1>
-          <button className="ghost historico" onClick={() => setMostrarDrawer(true)}>Histórico</button>
-        </div>
-
-        {diaEditando && (
-          <button className="ghost voltar" onClick={() => carregarDia(today())}>Voltar para hoje</button>
-        )}
-
-        <section className="card">
-          <h2>Peso (kg)</h2>
-          <input
-            type="text" inputMode="decimal" placeholder="82,4" value={form.peso}
-            onChange={e => set({ peso: e.target.value })}
-          />
-        </section>
-
-        <section className="card">
-          <label className="toggle">
-            <input type="checkbox" checked={form.treino} onChange={e => set({ treino: e.target.checked })} />
-            Treino
-          </label>
-        </section>
-
-        <section className="card">
-          <h2>Cardio</h2>
-          <select value={form.cardioTipo} onChange={e => set({ cardioTipo: e.target.value })}>
-            <option value="bike">Bike</option>
-            <option value="esteira">Esteira</option>
-            <option value="corrida">Corrida</option>
-          </select>
-          <div className="row">
-            <input placeholder="min" inputMode="numeric" value={form.cardioMin} onChange={e => set({ cardioMin: e.target.value })} />
-            <input placeholder="km" inputMode="decimal" value={form.cardioKm} onChange={e => set({ cardioKm: e.target.value })} />
-            <input placeholder="RPE 1-10" inputMode="numeric" value={form.cardioInt} onChange={e => set({ cardioInt: e.target.value })} />
-          </div>
-        </section>
-
-        <section className="card">
-          <label className="toggle">
-            <input type="checkbox" checked={form.estudo} onChange={e => set({ estudo: e.target.checked })} />
-            Estudo
-          </label>
-        </section>
-
-        <section className="card">
-          <h2>Aporte (R$)</h2>
-          <input type="text" inputMode="decimal" placeholder="0,00" value={form.aporte} onChange={e => set({ aporte: e.target.value })} />
-        </section>
-
-        <button className="save" onClick={handleSave}>{saved ? 'Salvo ✓' : 'Salvar'}</button>
-      </main>
-
-      {mostrarDrawer && <div className="overlay" />}
-
-      <aside className={mostrarDrawer ? 'drawer aberto' : 'drawer'}>
-        <h2>Histórico — 7 dias</h2>
-        <ul className="dias">
-          {historico.map(({ dia, form: resumo }) => (
-            <li key={dia}>
-              <button
-                className={dia === diaAtual ? 'dia ativo' : 'dia'}
-                onClick={() => carregarDia(dia)}
-              >
-                <span className="dia-data">{formatarDia(dia)}</span>
-                {temRegistro(resumo) ? (
-                  <span className="chips">
-                    <span className={resumo.peso.trim() ? 'chip' : 'chip vazio'}>
-                      {resumo.peso.trim() ? `${resumo.peso} kg` : '—'}
-                    </span>
-                    <span className={resumo.treino ? 'chip' : 'chip vazio'}>
-                      {resumo.treino ? 'treino ✓' : 'treino ·'}
-                    </span>
-                    <span className={chipCardio(resumo) === '—' ? 'chip vazio' : 'chip'}>
-                      {chipCardio(resumo)}
-                    </span>
-                    <span className={resumo.estudo ? 'chip' : 'chip vazio'}>
-                      {resumo.estudo ? 'estudo ✓' : 'estudo ·'}
-                    </span>
-                    <span className={resumo.aporte.trim() ? 'chip' : 'chip vazio'}>
-                      {resumo.aporte.trim() ? `R$ ${resumo.aporte}` : '—'}
-                    </span>
-                  </span>
-                ) : (
-                  <span className="dia-resumo">— sem registro —</span>
-                )}
-              </button>
-            </li>
+  if (pagina === 'home') {
+    return (
+      <div className="container">
+        <h1>life-tracker</h1>
+        <div className="menu">
+          <button className="menu-item ativo" onClick={() => setPagina('saude')}>Saúde</button>
+          {MODULOS.map(nome => (
+            <button key={nome} className="menu-item" disabled title="em breve">{nome}</button>
           ))}
-        </ul>
-        <button className="ghost fechar" onClick={() => setMostrarDrawer(false)}>Fechar</button>
-      </aside>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container">
+      <div className="topo">
+        <h1>{diaEditando ? `Editando ${formatarDia(diaEditando)}` : `Saúde — ${today()}`}</h1>
+        <div className="acoes">
+          <button className="ghost" onClick={() => setMostrarHistorico(true)}>Histórico</button>
+          <button
+            className="ghost"
+            onClick={() => { setMostrarHistorico(false); setPagina('home'); }}
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+
+      {diaEditando && (
+        <button className="ghost voltar" onClick={() => carregarDia(today())}>Voltar para hoje</button>
+      )}
+
+      <section className="card">
+        <h2>Peso (kg)</h2>
+        <input
+          type="text" inputMode="decimal" placeholder="82,4" value={form.peso}
+          onChange={e => set({ peso: e.target.value })}
+        />
+      </section>
+
+      <section className="card">
+        <label className="toggle">
+          <input type="checkbox" checked={form.treino} onChange={e => set({ treino: e.target.checked })} />
+          Treino
+        </label>
+      </section>
+
+      <section className="card">
+        <h2>Cardio</h2>
+        <select value={form.cardioTipo} onChange={e => set({ cardioTipo: e.target.value })}>
+          <option value="esteira">Esteira</option>
+          <option value="corrida">Corrida</option>
+          <option value="bike">Bicicleta</option>
+        </select>
+        <div className="row">
+          <label className="campo">
+            <span>Distância (km)</span>
+            <input placeholder="12" inputMode="decimal" value={form.cardioKm} onChange={e => set({ cardioKm: e.target.value })} />
+          </label>
+          <label className="campo">
+            <span>Tempo (min)</span>
+            <input placeholder="30" inputMode="numeric" value={form.cardioMin} onChange={e => set({ cardioMin: e.target.value })} />
+          </label>
+          <label className="campo">
+            <span>Intensidade percebida</span>
+            <input placeholder="1-10" inputMode="numeric" value={form.cardioInt} onChange={e => set({ cardioInt: e.target.value })} />
+          </label>
+        </div>
+      </section>
+
+      <button className="save" onClick={handleSave}>{saved ? 'Salvo ✓' : 'Salvar'}</button>
+
+      {mostrarHistorico && (
+        <>
+          <div className="overlay" onClick={() => setMostrarHistorico(false)} />
+          <div className="historico-painel" role="dialog" aria-modal="true">
+            <h2>Histórico — 7 dias</h2>
+            <ul className="dias">
+              {historico.map(({ dia, form: resumo }) => (
+                <li key={dia} className="dia-linha">
+                  <button
+                    className={dia === diaAtual ? 'dia ativo' : 'dia'}
+                    onClick={() => carregarDia(dia)}
+                  >
+                    <span className="dia-data">{formatarDia(dia)}</span>
+                    {temRegistro(resumo) ? (
+                      <span className="chips">
+                        <span className={resumo.peso.trim() ? 'chip' : 'chip vazio'}>
+                          {resumo.peso.trim() ? `${resumo.peso} kg` : '—'}
+                        </span>
+                        <span className={resumo.treino ? 'chip' : 'chip vazio'}>
+                          {resumo.treino ? 'treino ✓' : 'treino ·'}
+                        </span>
+                        <span className={chipCardio(resumo) === '—' ? 'chip vazio' : 'chip'}>
+                          {chipCardio(resumo)}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="dia-resumo">— sem registro —</span>
+                    )}
+                  </button>
+                  <button
+                    className="reset"
+                    title={`Zerar ${formatarDia(dia)}`}
+                    onClick={() => setResetPendente(dia)}
+                  >
+                    Zerar
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button className="ghost" onClick={() => setMostrarHistorico(false)}>Fechar</button>
+          </div>
+        </>
+      )}
 
       {confirmacaoPendente && diaEditando && (
         <div className="modal" role="dialog" aria-modal="true">
@@ -303,6 +331,19 @@ export default function App() {
             <div className="modal-acoes">
               <button className="save compacto" onClick={confirmarGravacao}>Confirmar</button>
               <button className="ghost" onClick={() => setConfirmacaoPendente(false)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {resetPendente && (
+        <div className="modal" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <h2>Confirmar reset</h2>
+            <p>Zerar <strong>{formatarDia(resetPendente)}</strong>?</p>
+            <div className="modal-acoes">
+              <button className="save compacto" onClick={confirmarReset}>Confirmar</button>
+              <button className="ghost" onClick={() => setResetPendente(null)}>Cancelar</button>
             </div>
           </div>
         </div>

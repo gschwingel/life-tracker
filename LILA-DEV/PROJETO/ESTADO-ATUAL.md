@@ -6,32 +6,42 @@ regra: este arquivo é o **único** lastro de estado vigente. Sessão que altera
 
 ## 1. O QUE EXISTE HOJE (comportamento observável)
 
-Uma tela única ("Hoje — AAAA-MM-DD") com cinco blocos: **Peso (kg)**, **Treino** (checkbox),
-**Cardio** (tipo bike/esteira/corrida + minutos + km + RPE 1-10), **Estudo** (checkbox) e
-**Aporte (R$)**. Ao abrir, o app carrega o que já existe para o dia de hoje; o botão **Salvar**
-grava (upsert) e mostra "Salvo ✓" por 2 s.
+Duas telas por **estado React** (`pagina: 'home' | 'saude'`, default `'home'`, sem roteador e sem URL):
 
-- **Drawer "Histórico — 7 dias"**: `<aside class="drawer">` à direita da tela em FLEX com `<main>`
-  (~280 px, fixo no desktop) listando hoje + os 6 dias anteriores, mais recente primeiro, data em
-  DD/MM/YYYY e chips resumidos (peso `82,4 kg` ou `—`, `treino ✓/·`, cardio `bike 30min` ou `—`,
-  `estudo ✓/·`, aporte `R$ X` ou `—`); dia sem registro mostra `— sem registro —`. Em viewport ≤720 px
-  vira gaveta oculta atrás do botão **Histórico**, com `.overlay` e **Fechar**.
-- **Edição de dia passado** (DEC-012/DEC-013): clicar num dia carrega o formulário com os mesmos três
-  SELECTs, parametrizados pelo dia; o cabeçalho vira "Editando DD/MM/YYYY" e aparece **Voltar para hoje**.
-  Salvar com `diaEditando != hoje` abre modal custom ("Salvar alterações em DD/MM/YYYY?" [Confirmar]
-  [Cancelar]) antes de escrever; salvar o dia de hoje segue o fluxo de FR-02 sem popup.
+- **Home** — título `life-tracker` (sem data) e 5 botões: **Saúde** (ativo, navega para a página Saúde)
+  e **Gestão de dopamina**, **Finanças**, **Aviação**, **Self improvement** (`disabled`, `opacity 0.5`,
+  `title="em breve"`, sem clique, sem rota).
+- **Saúde** — header `Saúde — AAAA-MM-DD` (ou `Editando DD/MM/YYYY` com **Voltar para hoje**), botões
+  **Histórico** e **Voltar** (volta para a home) e três blocos: **Peso (kg)**, **Treino** (checkbox) e
+  **Cardio** — Esteira/Corrida/Bicicleta (o valor gravado de Bicicleta continua `'bike'`; legado aparece
+  como Bicicleta) com **Distância (km)** → `distancia_km`, **Tempo (min)** → `minutos` e
+  **Intensidade percebida** → `intensidade`. **Salvar** grava (upsert) e mostra "Salvo ✓" por 2 s.
+- **Estudo e aporte saíram da UI** (DEC-014): nenhuma leitura ou escrita toca nessas linhas; os dados
+  existentes em `daily_logs` (`domain='estudo'`) e `invest_transactions` (`tipo='aporte'`) permanecem.
+- **Histórico dropdown** (DEC-014, substitui o drawer de FR-04): o botão **Histórico** — só na Saúde —
+  abre `.historico-painel` sobre `.overlay` nas duas plataformas (desktop e ≤720 px), com **Fechar**;
+  lista hoje + os 6 dias anteriores, descendente, data em DD/MM/YYYY e chips peso/treino/cardio (sem
+  estudo/aporte); dia vazio mostra `— sem registro —`. Fora da Saúde não há histórico.
+- **Edição de dia passado** (DEC-012/DEC-013): clicar na linha carrega o formulário com os SELECTs
+  parametrizados pelo dia, fecha o painel e o header vira "Editando DD/MM/YYYY"; salvar com
+  `diaEditando != hoje` abre modal custom ("Salvar alterações em DD/MM/YYYY?" [Confirmar] [Cancelar]).
+- **Reset do dia** (DEC-014): botão **Zerar** em cada linha do histórico; modal "Zerar DD/MM/YYYY?"
+  [Confirmar] [Cancelar]; confirmar roda `DELETE` em `daily_logs` + `cardio_logs` +
+  `invest_transactions` daquele dia, chama `persist()`, recarrega a lista e zera o formulário se aquele
+  dia estiver exibido. Vale para hoje e para dia passado. Sem `DROP`/`ALTER` (DEC-006).
 - Trocar de dia recarrega o formulário do banco: o que não foi salvo é descartado.
+- Refresh volta para a home (a página não é persistida — comportamento esperado, sem roteador).
 - Dia de referência: `new Date().toLocaleDateString('en-CA')` → `YYYY-MM-DD` **local** (`src/App.tsx:5`).
-- Sem gráficos, sem rota/roteador, sem autenticação, sem sincronização, sem exportação/importação.
+- Sem gráficos, sem roteador, sem autenticação, sem sincronização, sem exportação/importação.
 - Dias fora da janela de 7 dias não são navegáveis pela UI (ver §5).
 
 ## 2. MODELO DE DADOS (autoridade: `SCHEMA` em `src/db/database.ts`)
 
 | Tabela | Chave de unicidade | Campos | Uso hoje |
 |---|---|---|---|
-| `daily_logs` | `UNIQUE (dia, domain)` | `id, dia, domain, value, notes, created_at` | peso / treino / estudo (EAV: `domain` + `value`) |
-| `cardio_logs` | `UNIQUE (dia)` | `id, dia, tipo, minutos, distancia_km, intensidade, notes, created_at` | 1 cardio por dia |
-| `invest_transactions` | — | `id, data, tipo, ticker, valor, quantidade, notes, created_at` | só `tipo='aporte'`, 1 por dia (delete + insert) |
+| `daily_logs` | `UNIQUE (dia, domain)` | `id, dia, domain, value, notes, created_at` | peso / treino (EAV: `domain` + `value`); `estudo` legado, fora da UI (DEC-014) |
+| `cardio_logs` | `UNIQUE (dia)` | `id, dia, tipo, minutos, distancia_km, intensidade, notes, created_at` | 1 cardio por dia (tipo `esteira`/`corrida`/`bike`) |
+| `invest_transactions` | — | `id, data, tipo, ticker, valor, quantidade, notes, created_at` | `tipo='aporte'` legado, fora da UI; só `DELETE` no reset do dia (DEC-014) |
 | `portfolio_positions` | `UNIQUE (ticker)` | `id, ticker, quantidade, preco_medio, atualizado_em` | **sem uso** (tabela morta hoje) |
 
 Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), nunca SQL concatenado.
@@ -77,6 +87,9 @@ Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), n
 - Restante do escopo pós-14-dias: o dono furou a regra de sessão dos 14 dias de captura pura **apenas**
   para o frame do drawer/edição (DEC-012 corrigida por DEC-013); o que vinha depois dos 14 dias segue
   sem decisão de produto.
+- Destino do dado legado de **estudo** (`daily_logs.domain='estudo'`) e **aporte**
+  (`invest_transactions`): fora da UI desde DEC-014, permanecem no banco sem leitura/escrita fora do
+  reset — manter, reexpor ou remover é decisão do dono.
 
 Formato de parada para qualquer item acima: **P1 — AMBIGUIDADE NÃO COBERTA** (bloco `P1-DEV` do `.clinerules`).
 
