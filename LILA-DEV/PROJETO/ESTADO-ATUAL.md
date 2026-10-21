@@ -6,29 +6,40 @@ regra: este arquivo é o **único** lastro de estado vigente. Sessão que altera
 
 ## 1. O QUE EXISTE HOJE (comportamento observável)
 
-Duas telas por **estado React** (`pagina: 'home' | 'saude'`, default `'home'`, sem roteador e sem URL):
+Três telas por **estado React** (`pagina: 'home' | 'saude' | 'dopamina'`, default `'home'`, sem
+roteador e sem URL):
 
-- **Home** — título `life-tracker` (sem data) e 5 botões: **Saúde** (ativo, navega para a página Saúde)
-  e **Gestão de dopamina**, **Finanças**, **Aviação**, **Self improvement** (`disabled`, `opacity 0.5`,
+- **Home** — título `life-tracker` (sem data) e 5 botões: **Saúde** e **Gestão de dopamina** (ativos,
+  navegam por estado) + **Finanças**, **Aviação**, **Self improvement** (`disabled`, `opacity 0.5`,
   `title="em breve"`, sem clique, sem rota).
 - **Saúde** — header `Saúde — AAAA-MM-DD` (ou `Editando DD/MM/YYYY` com **Voltar para hoje**), botões
   **Histórico** e **Voltar** (volta para a home) e três blocos: **Peso (kg)**, **Treino** (checkbox) e
   **Cardio** — Esteira/Corrida/Bicicleta (o valor gravado de Bicicleta continua `'bike'`; legado aparece
   como Bicicleta) com **Distância (km)** → `distancia_km`, **Tempo (min)** → `minutos` e
   **Intensidade percebida** → `intensidade`. **Salvar** grava (upsert) e mostra "Salvo ✓" por 2 s.
+- **Gestão de dopamina** (DEC-015) — header `Gestão de dopamina — AAAA-MM-DD` (ou `Editando DD/MM/YYYY`
+  + **Voltar para hoje**), botões **Histórico** e **Voltar**, blocos **Instagram** e **Sono**:
+  - Instagram: toggle **Não abri hoje** (default desmarcado). Marcado → abstinência `1` e o dropdown de
+    horas fica `disabled` e grava vazio (trava anti-contradição). Desmarcado → dropdown `—` /
+    `< 1 hora` / `1 a 3 horas` / `> 3 horas`, gravando `0` / `1` / `2` (ou nada, se `—`).
+  - Sono: horas dormidas em campo decimal pt-BR (`num()` com vírgula, placeholder `7,5`), gravadas em
+    `sono_horas` limitadas a 0–24; vazio = sem registro.
 - **Estudo e aporte saíram da UI** (DEC-014): nenhuma leitura ou escrita toca nessas linhas; os dados
   existentes em `daily_logs` (`domain='estudo'`) e `invest_transactions` (`tipo='aporte'`) permanecem.
-- **Histórico dropdown** (DEC-014, substitui o drawer de FR-04): o botão **Histórico** — só na Saúde —
-  abre `.historico-painel` sobre `.overlay` nas duas plataformas (desktop e ≤720 px), com **Fechar**;
-  lista hoje + os 6 dias anteriores, descendente, data em DD/MM/YYYY e chips peso/treino/cardio (sem
-  estudo/aporte); dia vazio mostra `— sem registro —`. Fora da Saúde não há histórico.
+- **Histórico dropdown por página** (DEC-014/DEC-015, substitui o drawer de FR-04): o botão
+  **Histórico** — presente na Saúde e na Gestão de dopamina, cada uma com o seu — abre
+  `.historico-painel` sobre `.overlay` nas duas plataformas (desktop e ≤720 px), com **Fechar**; lista
+  hoje + os 6 dias anteriores, descendente, data em DD/MM/YYYY. Chips: na Saúde peso/treino/cardio; na
+  Dopamina `IG ✓/·` + `<1h`/`1–3h`/`>3h`/`—` + `sono Xh`/`—`. Dia sem registro da página mostra
+  `— sem registro —`. Fora das duas páginas não há histórico.
 - **Edição de dia passado** (DEC-012/DEC-013): clicar na linha carrega o formulário com os SELECTs
   parametrizados pelo dia, fecha o painel e o header vira "Editando DD/MM/YYYY"; salvar com
   `diaEditando != hoje` abre modal custom ("Salvar alterações em DD/MM/YYYY?" [Confirmar] [Cancelar]).
-- **Reset do dia** (DEC-014): botão **Zerar** em cada linha do histórico; modal "Zerar DD/MM/YYYY?"
-  [Confirmar] [Cancelar]; confirmar roda `DELETE` em `daily_logs` + `cardio_logs` +
-  `invest_transactions` daquele dia, chama `persist()`, recarrega a lista e zera o formulário se aquele
-  dia estiver exibido. Vale para hoje e para dia passado. Sem `DROP`/`ALTER` (DEC-006).
+- **Reset do dia** (DEC-014/DEC-015): botão **Zerar** em cada linha do histórico; modal "Zerar
+  DD/MM/YYYY?" [Confirmar] [Cancelar]; confirmar roda `DELETE` em `daily_logs` (todos os `domain` do dia,
+  incluindo os da Dopamina e os legados) + `cardio_logs` + `invest_transactions`, chama `persist()`,
+  recarrega a lista e zera o formulário se aquele dia estiver exibido. Vale para hoje e para dia
+  passado. Sem `DROP`/`ALTER` (DEC-006).
 - Trocar de dia recarrega o formulário do banco: o que não foi salvo é descartado.
 - Refresh volta para a home (a página não é persistida — comportamento esperado, sem roteador).
 - Dia de referência: `new Date().toLocaleDateString('en-CA')` → `YYYY-MM-DD` **local** (`src/App.tsx:5`).
@@ -39,7 +50,7 @@ Duas telas por **estado React** (`pagina: 'home' | 'saude'`, default `'home'`, s
 
 | Tabela | Chave de unicidade | Campos | Uso hoje |
 |---|---|---|---|
-| `daily_logs` | `UNIQUE (dia, domain)` | `id, dia, domain, value, notes, created_at` | peso / treino (EAV: `domain` + `value`); `estudo` legado, fora da UI (DEC-014) |
+| `daily_logs` | `UNIQUE (dia, domain)` | `id, dia, domain, value, notes, created_at` | EAV por dia: `peso`, `treino` (Saúde); `dopamina_insta_abst` 1/0, `dopamina_insta_horas` 0/1/2 (`<1h`/`1–3h`/`>3h`), `sono_horas` float 0–24 (Dopamina, DEC-015); `estudo` legado, fora da UI |
 | `cardio_logs` | `UNIQUE (dia)` | `id, dia, tipo, minutos, distancia_km, intensidade, notes, created_at` | 1 cardio por dia (tipo `esteira`/`corrida`/`bike`) |
 | `invest_transactions` | — | `id, data, tipo, ticker, valor, quantidade, notes, created_at` | `tipo='aporte'` legado, fora da UI; só `DELETE` no reset do dia (DEC-014) |
 | `portfolio_positions` | `UNIQUE (ticker)` | `id, ticker, quantidade, preco_medio, atualizado_em` | **sem uso** (tabela morta hoje) |
@@ -90,6 +101,8 @@ Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), n
 - Destino do dado legado de **estudo** (`daily_logs.domain='estudo'`) e **aporte**
   (`invest_transactions`): fora da UI desde DEC-014, permanecem no banco sem leitura/escrita fora do
   reset — manter, reexpor ou remover é decisão do dono.
+- Sugestões avançadas da Dopamina **guardadas** em SP-04, sem decisão: streak sem abrir, deitar/acordar
+  + qualidade do sono, notificação tornando o preenchimento compulsório.
 
 Formato de parada para qualquer item acima: **P1 — AMBIGUIDADE NÃO COBERTA** (bloco `P1-DEV` do `.clinerules`).
 
