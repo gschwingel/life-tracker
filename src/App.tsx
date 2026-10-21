@@ -46,14 +46,20 @@ const listarUltimos7Dias = (): string[] => {
   return dias;
 };
 
-const resumoTexto = (f: Form): string => {
-  const partes: string[] = [];
-  if (f.peso.trim()) partes.push(`${f.peso} kg`);
-  if (f.treino) partes.push('treino');
-  if (f.cardioMin.trim() || f.cardioKm.trim()) partes.push(`cardio ${f.cardioMin.trim() || '0'} min`);
-  if (f.estudo) partes.push('estudo');
-  if (f.aporte.trim()) partes.push(`R$ ${f.aporte}`);
-  return partes.length ? partes.join(' · ') : 'sem registro';
+const temRegistro = (f: Form): boolean =>
+  f.peso.trim() !== '' ||
+  f.aporte.trim() !== '' ||
+  f.cardioMin.trim() !== '' ||
+  f.cardioKm.trim() !== '' ||
+  f.cardioInt.trim() !== '' ||
+  f.treino ||
+  f.estudo;
+
+// D9: detalhe de min/km/RPE fica na tela de edição; a linha mostra "tipo Nmin".
+const chipCardio = (f: Form): string => {
+  if (f.cardioMin.trim()) return `${f.cardioTipo} ${f.cardioMin.trim()}min`;
+  if (f.cardioKm.trim()) return `${f.cardioTipo} ${f.cardioKm.trim()}km`;
+  return '—';
 };
 
 // Os três SELECTs de carga, parametrizados pelo dia.
@@ -198,7 +204,7 @@ export default function App() {
       <main className="container">
         <div className="topo">
           <h1>{diaEditando ? `Editando ${formatarDia(diaEditando)}` : `Hoje — ${today()}`}</h1>
-          <button className="ghost" onClick={() => setMostrarDrawer(true)}>Histórico</button>
+          <button className="ghost historico" onClick={() => setMostrarDrawer(true)}>Histórico</button>
         </div>
 
         {diaEditando && (
@@ -249,42 +255,54 @@ export default function App() {
         <button className="save" onClick={handleSave}>{saved ? 'Salvo ✓' : 'Salvar'}</button>
       </main>
 
-      {mostrarDrawer && (
-        <>
-          <div className="overlay" />
-          <aside className="drawer">
-            <h2>Últimos 7 dias</h2>
-            <ul className="dias">
-              {historico.map(({ dia, form: resumo }) => (
-                <li key={dia}>
-                  <button
-                    className={dia === diaAtual ? 'dia ativo' : 'dia'}
-                    onClick={() => carregarDia(dia)}
-                  >
-                    <span className="dia-data">
-                      {dia === today() ? `Hoje — ${formatarDia(dia)}` : formatarDia(dia)}
+      {mostrarDrawer && <div className="overlay" />}
+
+      <aside className={mostrarDrawer ? 'drawer aberto' : 'drawer'}>
+        <h2>Histórico — 7 dias</h2>
+        <ul className="dias">
+          {historico.map(({ dia, form: resumo }) => (
+            <li key={dia}>
+              <button
+                className={dia === diaAtual ? 'dia ativo' : 'dia'}
+                onClick={() => carregarDia(dia)}
+              >
+                <span className="dia-data">{formatarDia(dia)}</span>
+                {temRegistro(resumo) ? (
+                  <span className="chips">
+                    <span className={resumo.peso.trim() ? 'chip' : 'chip vazio'}>
+                      {resumo.peso.trim() ? `${resumo.peso} kg` : '—'}
                     </span>
-                    <span className="dia-resumo">{resumoTexto(resumo)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button className="ghost" onClick={() => setMostrarDrawer(false)}>Fechar</button>
-          </aside>
-        </>
-      )}
+                    <span className={resumo.treino ? 'chip' : 'chip vazio'}>
+                      {resumo.treino ? 'treino ✓' : 'treino ·'}
+                    </span>
+                    <span className={chipCardio(resumo) === '—' ? 'chip vazio' : 'chip'}>
+                      {chipCardio(resumo)}
+                    </span>
+                    <span className={resumo.estudo ? 'chip' : 'chip vazio'}>
+                      {resumo.estudo ? 'estudo ✓' : 'estudo ·'}
+                    </span>
+                    <span className={resumo.aporte.trim() ? 'chip' : 'chip vazio'}>
+                      {resumo.aporte.trim() ? `R$ ${resumo.aporte}` : '—'}
+                    </span>
+                  </span>
+                ) : (
+                  <span className="dia-resumo">— sem registro —</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button className="ghost fechar" onClick={() => setMostrarDrawer(false)}>Fechar</button>
+      </aside>
 
       {confirmacaoPendente && diaEditando && (
         <div className="modal" role="dialog" aria-modal="true">
           <div className="modal-card">
             <h2>Confirmar gravação</h2>
-            <p>
-              Gravar as alterações em <strong>{formatarDia(diaEditando)}</strong>? Os registros desse
-              dia serão substituídos pelos valores da tela.
-            </p>
+            <p>Salvar alterações em <strong>{formatarDia(diaEditando)}</strong>?</p>
             <div className="modal-acoes">
+              <button className="save compacto" onClick={confirmarGravacao}>Confirmar</button>
               <button className="ghost" onClick={() => setConfirmacaoPendente(false)}>Cancelar</button>
-              <button className="save compacto" onClick={confirmarGravacao}>Gravar</button>
             </div>
           </div>
         </div>

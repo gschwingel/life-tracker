@@ -11,17 +11,19 @@ Uma tela única ("Hoje — AAAA-MM-DD") com cinco blocos: **Peso (kg)**, **Trein
 **Aporte (R$)**. Ao abrir, o app carrega o que já existe para o dia de hoje; o botão **Salvar**
 grava (upsert) e mostra "Salvo ✓" por 2 s.
 
-- **Drawer "Últimos 7 dias"** (botão **Histórico**): `<aside class="drawer">` sobre `<div class="overlay">`
-  listando hoje + os 6 dias anteriores, cada linha com resumo do que está gravado no dia
-  ("sem registro" quando o dia está vazio). Clicar em um dia carrega os valores salvos com os mesmos
-  três SELECTs, parametrizados pelo dia, e fecha o drawer.
-- **Edição de dia passado** (DEC-012): o cabeçalho passa a "Editando DD/MM/YYYY" e aparece
-  **Voltar para hoje**. Salvar em dia passado abre modal de confirmação (`Cancelar` / `Gravar`,
-  estado React — sem `alert`/`confirm`) antes de escrever; salvar no dia de hoje continua direto.
+- **Drawer "Histórico — 7 dias"**: `<aside class="drawer">` à direita da tela em FLEX com `<main>`
+  (~280 px, fixo no desktop) listando hoje + os 6 dias anteriores, mais recente primeiro, data em
+  DD/MM/YYYY e chips resumidos (peso `82,4 kg` ou `—`, `treino ✓/·`, cardio `bike 30min` ou `—`,
+  `estudo ✓/·`, aporte `R$ X` ou `—`); dia sem registro mostra `— sem registro —`. Em viewport ≤720 px
+  vira gaveta oculta atrás do botão **Histórico**, com `.overlay` e **Fechar**.
+- **Edição de dia passado** (DEC-012/DEC-013): clicar num dia carrega o formulário com os mesmos três
+  SELECTs, parametrizados pelo dia; o cabeçalho vira "Editando DD/MM/YYYY" e aparece **Voltar para hoje**.
+  Salvar com `diaEditando != hoje` abre modal custom ("Salvar alterações em DD/MM/YYYY?" [Confirmar]
+  [Cancelar]) antes de escrever; salvar o dia de hoje segue o fluxo de FR-02 sem popup.
 - Trocar de dia recarrega o formulário do banco: o que não foi salvo é descartado.
 - Dia de referência: `new Date().toLocaleDateString('en-CA')` → `YYYY-MM-DD` **local** (`src/App.tsx:5`).
 - Sem gráficos, sem rota/roteador, sem autenticação, sem sincronização, sem exportação/importação.
-- Dias fora da janela de 7 dias continuam inacessíveis pela UI (ver §5).
+- Dias fora da janela de 7 dias não são navegáveis pela UI (ver §5).
 
 ## 2. MODELO DE DADOS (autoridade: `SCHEMA` em `src/db/database.ts`)
 
@@ -72,8 +74,9 @@ Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), n
 - Destino de `portfolio_positions` (implementar carteira ou remover tabela).
 - Política de migração para bases já instaladas (hoje: inexistente).
 - Versionar ou não `node_modules` (ver §4.6).
-- Histórico além da janela de 7 dias: o drawer cobre hoje + 6 dias (DEC-012); navegar mais para trás
-  (o "furo" de 14 dias do escopo de histórico) continua sem cobertura e sem decisão de produto.
+- Restante do escopo pós-14-dias: o dono furou a regra de sessão dos 14 dias de captura pura **apenas**
+  para o frame do drawer/edição (DEC-012 corrigida por DEC-013); o que vinha depois dos 14 dias segue
+  sem decisão de produto.
 
 Formato de parada para qualquer item acima: **P1 — AMBIGUIDADE NÃO COBERTA** (bloco `P1-DEV` do `.clinerules`).
 
