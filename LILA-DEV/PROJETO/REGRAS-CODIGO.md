@@ -8,15 +8,16 @@ natureza: **descrição do que o código já faz**, não preferência nova. Desv
 
 - TypeScript **strict** com `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters`.
   Código que não passa em `npm run typecheck` não existe.
-- Proibido `any` explícito; linha de banco vem de `stmt.getAsObject() as { ... }` (`src/App.tsx:44`).
+- Proibido `any` explícito; linha de banco vem de `stmt.getAsObject() as { ... }` (`src/db/repo.ts:92`).
 - Sem `enum`, sem decorators, sem namespace. Tipos locais com `type` (`type Form = {...}`).
-- Funções utilitárias de módulo em `const` arrow (`const num = (s: string): number | null => ...`).
+- Funções utilitárias de módulo em `const` arrow (`const num = (s: string): number | null => ...`,
+  `src/db/repo.ts:37`).
 
 ## 2. ESTILO (medido no código existente)
 
 - 2 espaços, aspas simples, ponto e vírgula obrigatório.
 - Componentes: função + hooks (`export default function App()`), nunca classe. Um `createRoot`.
-- `useState` com updater funcional em patch (`setForm(f => ({ ...f, ...patch }))`, `src/App.tsx:128`).
+- `useState` com updater funcional em patch (`setForm(f => ({ ...f, ...patch }))`, `src/App.tsx:94`).
 - CSS global em `src/index.css`, classes curtas (`.card`, `.row`, `.toggle`, `.save`). Sem framework,
   sem CSS-in-JS, sem Tailwind. Paleta atual: fundo `#0f172a`, superfície `#1e293b`, texto `#e2e8f0`,
   destaque `#38bdf8`.
@@ -37,7 +38,7 @@ natureza: **descrição do que o código já faz**, não preferência nova. Desv
 ## 5. NÚMEROS
 
 - Entrada numérica = `<input type="text" inputMode="decimal|numeric">` + `num()`:
-  `Number(s.replace(',', '.'))`, vazio → `null` (`src/App.tsx:28`).
+  `Number(s.replace(',', '.'))`, vazio → `null` (`src/db/repo.ts:37`).
 - Proibido `parseFloat`/`Number` direto no valor do input: `parseFloat('82,4')` retorna `82`
   (truncamento silencioso do decimal brasileiro).
 - Comparação de `value` booleano no banco: `1/0` (`row.value === 1`, `form.treino ? 1 : 0`).
@@ -69,7 +70,7 @@ natureza: **descrição do que o código já faz**, não preferência nova. Desv
 ## 9. HIGIENE
 
 - Sem `console.log` esquecido em `src/` (debug temporário sai antes da entrega).
-- Sem `alert`/`confirm`: feedback é estado de UI (`saved` + timeout, `src/App.tsx:124-125`).
+- Sem `alert`/`confirm`: feedback é estado de UI (`saved` + timeout, `src/App.tsx:60-62`).
 - Segredo nunca no código: `.env.local` é untracked (`.gitignore`: `.env*`); só `VERCEL_OIDC_TOKEN` hoje.
 - Texto visível ao usuário em pt-BR, com acentuação correta (o código é UTF-8).
 

@@ -15,11 +15,12 @@ life-tracker/
 ├─ public/                    # icon-192.png, icon-512.png (servidos na raiz)
 ├─ src/
 │  ├─ main.tsx                # bootstrap React (StrictMode) — único createRoot
-│  ├─ App.tsx                 # tela "Hoje": form, carga do dia, handleSave
+│  ├─ App.tsx                 # 3 telas por estado: só estado + JSX + modal/dropdown
 │  ├─ index.css               # estilo global (sem framework, sem CSS modules)
 │  ├─ vite-env.d.ts
 │  └─ db/
 │     ├─ database.ts          # SCHEMA (4 tabelas) + getDb() + persist()
+│     ├─ repo.ts              # camada de dados: SELECTs, upserts, reset, puros (SP-05/FR-09)
 │     └─ idb.ts               # IndexedDB puro: loadDbBytes / saveDbBytes
 ├─ LILA-DEV/PROJETO/          # camada de regras viva (PROTOCOLO-LOCAL, ESTADO, DECISOES, LOG, MAPA, REGRAS)
 ├─ LILA-DEV/                  # FDVs/protocolos herdados (referência; filtrados pelo PROTOCOLO-LOCAL §2)
@@ -63,5 +64,6 @@ Não existe: rede, API, servidor, fila, worker, estado global, rota.
 - **Dado do usuário é irreversível** (IndexedDB local): schema, migração ou delete nunca é PATCH.
 - `src/db/idb.ts` é a **única** porta para IndexedDB; ninguém mais chama `indexedDB` diretamente.
 - `src/db/database.ts` é a **única** fonte de DDL e o **único** dono do singleton `db`.
-- `App.tsx` hoje concentra UI + query + regra de gravação. Ao passar de ~400 linhas, extrair
-  camada de dados para `src/db/repo.ts` — **antes** de adicionar a 2ª tela (decisão ESTRUTURAL).
+- `App.tsx` mantém só UI (estado + JSX + modal/dropdown); **todo** SQL de produto vive em
+  `src/db/repo.ts` (extraído em SP-05/FR-09, 2026-10-20: 248 linhas de UI, 179 de dados). SQL novo
+  entra no repo, não no `App.tsx`; `SCHEMA` continua exclusivo de `database.ts` (DEC-006).

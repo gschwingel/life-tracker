@@ -42,7 +42,11 @@ roteador e sem URL):
   passado. Sem `DROP`/`ALTER` (DEC-006).
 - Trocar de dia recarrega o formulário do banco: o que não foi salvo é descartado.
 - Refresh volta para a home (a página não é persistida — comportamento esperado, sem roteador).
-- Dia de referência: `new Date().toLocaleDateString('en-CA')` → `YYYY-MM-DD` **local** (`src/App.tsx:5`).
+- Dia de referência: `new Date().toLocaleDateString('en-CA')` → `YYYY-MM-DD` **local** (`today()` em `src/db/repo.ts:35`).
+- **Camada de dados em `src/db/repo.ts`** (SP-05/FR-09, 2026-10-20): `lerDia`, `gravar(db, dia, pagina, form)`,
+  `resetDia`, `carregarUltimos7Dias` + puros `today`, `num`, `formatarDia`, `listarUltimos7Dias`,
+  `temRegistroSaude`, `temRegistroDopamina`, `chipCardio`, `rotuloHoras`. `App.tsx` mantém só estado + JSX +
+  modal/dropdown; o SQL parametrizado e o `persist()` vivem no repo.
 - Sem gráficos, sem roteador, sem autenticação, sem sincronização, sem exportação/importação.
 - Dias fora da janela de 7 dias não são navegáveis pela UI (ver §5).
 
@@ -55,7 +59,8 @@ roteador e sem URL):
 | `invest_transactions` | — | `id, data, tipo, ticker, valor, quantidade, notes, created_at` | `tipo='aporte'` legado, fora da UI; só `DELETE` no reset do dia (DEC-014) |
 | `portfolio_positions` | `UNIQUE (ticker)` | `id, ticker, quantidade, preco_medio, atualizado_em` | **sem uso** (tabela morta hoje) |
 
-Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), nunca SQL concatenado.
+Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), nunca SQL concatenado —
+hoje concentrado em `src/db/repo.ts` (único arquivo com SQL, além do DDL).
 
 ## 3. PERSISTÊNCIA
 
@@ -88,6 +93,11 @@ Leitura/escrita sempre via `db.prepare(...)` / `db.run(sql, params)` (sql.js), n
    (não se edita script herdado sem `DEC-NNN`).
 10. **Espelho de planejamento sem ledger populado.** `LILA-DEV/planejamento/decisoes-ledger.json`
     está `[]`; as decisões retroativas vivem no FR `FR-BOOTSTRAP-20261020` e nos snapshots.
+11. **Fronteira `App.tsx` × `repo.ts` (SP-05/FR-09, 2026-10-20).** `src/App.tsx` = 248 linhas
+    (estado + JSX + modal/dropdown, zero `db.prepare`/`db.run`) e `src/db/repo.ts` = 179 linhas
+    (2 SELECTs, 2 upserts, 3 `DELETE` de reset, 1 `DELETE` por domain, `persist()`). Os 8 statements
+    são idênticos, na mesma ordem, aos que viviam no `App.tsx` (move puro, nenhum statement novo);
+    `SCHEMA` intocado (DEC-006).
 
 ## 5. PENDÊNCIAS DE DECISÃO (não são backlog da IA)
 
